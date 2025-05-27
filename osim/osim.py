@@ -4,6 +4,7 @@ from gymnasium import Env, spaces
 from opensim import ActivationCoordinateActuator, Constant, Logger, Manager, Model, PrescribedController, \
     ScalarActuator, CoordinateActuator
 from typing import Optional
+import math
 
 """Opensim environment for musculoskeletal movement"""
 
@@ -259,7 +260,7 @@ class OsimModel(Env):
         :param obs_dict: The observation of the environment
         :return: True if the environment is truncated, false otherwise
         """
-        return obs_dict["pelvis_tx"] < -0.10 or obs_dict["pelvis_ty"] < 0.60 or abs(obs_dict["pelvis_tz"]) > 0.4
+        return False
 
 
     def get_reward(self, obs_dict: dict) -> float:
@@ -284,14 +285,30 @@ class OsimModel(Env):
         d = self.data
 
         # === GOAL REWARD ===
-        try: ## This is a temporary goal reward funtion, Robert made a proper one.
-            hand_y = obs_dict["ty"]
-            target_y = d["ty"][t]
-            dist_squared = (hand_y - target_y) ** 2
-            goal_reward = np.exp(-10 * dist_squared)
-        except KeyError:
-            print("Hand/target markers are missing")
+        # try: ## This is a temporary goal reward funtion, Robert made a proper one.
+        #     hand_y = obs_dict["ty"]
+        #     target_y = d["ty"][t]
+        #     dist_squared = (hand_y - target_y) ** 2
+        #     goal_reward = np.exp(-10 * dist_squared)
+        # except KeyError:
+        #     print("Hand/target markers are missing")
+        #     goal_reward = 1.0
+
+        cmc_abduction = self.get_joint_angle("CMC1b", "cmc_abduction")
+        two_mcp_flexion = self.get_joint_angle("2MCP", "2mcp_flexion")
+
+        # Calculate for finger contact
+        fingers_touching = two_mcp_flexion < math.radians(0.5 * (math.degrees(cmc_abduction) - 5) + 57)
+
+        # Get muscle forces
+        eip_force = self.get_muscle_force("EIP")
+        epb_force = self.get_muscle_force("EPB")
+
+        # Grasp reward: fingers not touching, but muscles are active
+        if not fingers_touching and (eip_force > 0.0 or epb_force > 0.0):
             goal_reward = 1.0
+        else:
+            goal_reward = 0.0
 
         # === IMITATION REWARD ===
 
@@ -429,3 +446,33 @@ class OsimModel(Env):
             exit()
 
         return np.asarray(obs_list), obs_dict'''
+
+    def get_joint_angle(self, joint_name: str, coordinate_name: str) -> float:
+        """
+        Retrieves the current angle/value of a specific coordinate in a joint.
+
+        :param joint_name: The name of the joint
+        :param coordinate_name: The name of the coordinate
+        :return: The current angle/value of the coordinate
+        :raises: ValueError if joint or coordinate is not found
+        """
+        if not self.jointSet.contains(joint_name):
+            raise ValueError(f"Joint '{joint_name}' not found in JointSet.")
+        joint = self.jointSet.get(joint_name)
+        for i in range(joint.numCoordinates()):
+            coord = joint.get_coordinates(i)
+            if coord.getName() == coordinate_name:
+                return coord.getValue(self.state)
+        raise ValueError(f"Coordinate '{coordinate_name}' not found in joint '{joint_name}'.")
+    
+    def get_muscle_force(self, muscle_name: str) -> float:
+        """
+        Safely get the current force exerted by a named muscle.
+
+        :param muscle_name: The name of the muscle in the ForceSet
+        :return: The force in Newtons
+        :raises: ValueError if the muscle name is invalid
+        """
+        if not self.forceSet.contains(muscle_name):
+            raise ValueError(f"Muscle '{muscle_name}' not found in ForceSet.")
+        return self.forceSet.get(muscle_name).getRecordValues(self.state).get(0)
