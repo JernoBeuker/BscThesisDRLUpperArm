@@ -7,6 +7,50 @@ from typing import Optional
 
 """Opensim environment for musculoskeletal movement"""
 
+COORDS_TO_SKIP = {
+    "sternoclavicular_r2",
+    "sternoclavicular_r3",
+    "unrotscap_r3",
+    "unrotscap_r2",
+    "acromioclavicular_r2",
+    "acromioclavicular_r3",
+    "acromioclavicular_r1",
+    "unrothum_r1",
+    "unrothum_r3",
+    "unrothum_r2",
+    "shoulder1_r2",
+    "proximal_distal_r1",
+    "proximal_distal_r3",
+    "APLpt_tx",
+    "APLpt_tx",
+    "APLpt_ty",
+    "APLpt_tz",
+    "FPLpt_tx",
+    "FPLpt_ty",
+    "FPLpt_tz",
+    "FPLpt2_tx",
+    "FPLpt2_ty",
+    "FPLpt2_tz",
+    "rx",
+    "ry",
+    "rz",
+    "tx",
+    "ty",
+    "tz"
+}
+
+ ## Not used rn, but very useful to have for now
+LOCKED_DOFS = {
+    "cmc_flexion", 
+    "cmc_abduction", 
+    "mp_flexion", 
+    "ip_flexion",
+    "2mcp_flexion", 
+    "2mcp_abduction", 
+    "2pm_flexion", 
+    "2md_flexion"
+}
+
 
 class OsimModel(Env):
 
@@ -235,71 +279,37 @@ class OsimModel(Env):
         :param obs_dict: The current state of the environment
         :return: The reward of environment at the current observation, range [0, 1]
         """
+        
         t = self.i_step
         d = self.data
 
-        # GOAL REWARD
-        # Goal mean squared errors
-        pelvis_x = (obs_dict["pelvis_tx"] - d["pelvis_tx"][t]) ** 2
-        pelvis_y = (obs_dict["pelvis_ty"] - d["pelvis_ty"][t]) ** 2
-        pelvis_z = (obs_dict["pelvis_tz"] - d["pelvis_tz"][t]) ** 2
+        # === GOAL REWARD ===
+        try: ## This is a temporary goal reward funtion, Robert made a proper one.
+            hand_y = obs_dict["ty"]
+            target_y = d["ty"][t]
+            dist_squared = (hand_y - target_y) ** 2
+            goal_reward = np.exp(-10 * dist_squared)
+        except KeyError:
+            print("Hand/target markers are missing")
+            goal_reward = 1.0
 
-        goal_reward = np.exp(-8 * (pelvis_x + pelvis_y + pelvis_z))
+        # === IMITATION REWARD ===
 
-        # IMITATION REWARD
-        # POSITION mean squared errors
-        pelvis_tilt = (obs_dict["pelvis_tilt"] - d["pelvis_tilt"][t]) ** 2
-        pelvis_list = (obs_dict["pelvis_list"] - d["pelvis_list"][t]) ** 2
-        pelvis_rotation = (obs_dict["pelvis_rotation"] - d["pelvis_rotation"][t]) ** 2
+        p_loss = 0.0
+        v_loss = 0.0
 
-        ankle_l = (obs_dict["ankle_angle_l"] - d["ankle_angle_l"][t]) ** 2
-        knee_l = (obs_dict["knee_angle_l"] - d["knee_angle_l"][t]) ** 2
-        hip_l_flex = (obs_dict["hip_flexion_l"] - d["hip_flexion_l"][t]) ** 2
-        hip_l_add = (obs_dict["hip_adduction_l"] - d["hip_adduction_l"][t]) ** 2
+        for name in obs_dict:
+            base_name = name.replace("_vel", "")
+            if base_name in COORDS_TO_SKIP:
+                continue  # skip locked DoFs
 
-        ankle_r = (obs_dict["ankle_angle_r"] - d["ankle_angle_r"][t]) ** 2
-        knee_r = (obs_dict["knee_angle_r"] - d["knee_angle_r"][t]) ** 2
-        hip_r_flex = (obs_dict["hip_flexion_r"] - d["hip_flexion_r"][t]) ** 2
-        hip_r_add = (obs_dict["hip_adduction_r"] - d["hip_adduction_r"][t]) ** 2
+            if name.endswith("_vel") and name in d.columns:
+                v_loss += (obs_dict[name] - d[name][t]) ** 2
+            elif name in d.columns:
+                p_loss += (obs_dict[name] - d[name][t]) ** 2
 
-        p_loss = (
-                pelvis_tilt
-                + pelvis_list
-                + pelvis_rotation
-                + ankle_l
-                + knee_l
-                + hip_l_flex
-                + hip_l_add
-                + ankle_r
-                + knee_r
-                + hip_r_flex
-                + hip_r_add
-        )
         position_reward = np.exp(-4 * p_loss)
-
-        # VELOCITY mean squared errors
-        ankle_l_vel = (obs_dict["ankle_angle_l_vel"] - d["ankle_angle_l_vel"][t]) ** 2
-        knee_l_vel = (obs_dict["knee_angle_l_vel"] - d["knee_angle_l_vel"][t]) ** 2
-        hip_l_flex_vel = (obs_dict["hip_flexion_l_vel"] - d["hip_flexion_l_vel"][t]) ** 2
-        hip_l_add_vel = (obs_dict["hip_adduction_l_vel"] - d["hip_adduction_l_vel"][t]) ** 2
-
-        ankle_r_vel = (obs_dict["ankle_angle_r_vel"] - d["ankle_angle_r_vel"][t]) ** 2
-        knee_r_vel = (obs_dict["knee_angle_r_vel"] - d["knee_angle_r_vel"][t]) ** 2
-        hip_r_flex_vel = (obs_dict["hip_flexion_r_vel"] - d["hip_flexion_r_vel"][t]) ** 2
-        hip_r_add_vel = (obs_dict["hip_adduction_r_vel"] - d["hip_adduction_r_vel"][t]) ** 2
-
-        v_loss = (
-                ankle_l_vel
-                + knee_l_vel
-                + hip_l_flex_vel
-                + hip_l_add_vel
-                + ankle_r_vel
-                + knee_r_vel
-                + hip_r_flex_vel
-                + hip_r_add_vel
-        )
         velocity_reward = np.exp(-0.1 * v_loss)
-
         imitation_reward = 0.9 * position_reward + 0.1 * velocity_reward
 
         return 0.9 * imitation_reward + 0.1 * goal_reward
@@ -319,7 +329,7 @@ class OsimModel(Env):
             for i in range(joint.numCoordinates()):
                 coord = joint.get_coordinates(i)
                 name = coord.getName()
-                if name in ["hip_rotation_r", "hip_rotation_l", "lumbar_extension"]:
+                if name in COORDS_TO_SKIP:
                     continue
                 obs_dict[f"{name}"] = coord.getValue(self.state)
                 obs_dict[f"{name}_vel"] = coord.getSpeedValue(self.state)
@@ -338,14 +348,16 @@ class OsimModel(Env):
             for i in range(joint.numCoordinates()):
                 coord = joint.get_coordinates(i)
                 name = coord.getName()
-                if name in ["hip_rotation_r", "hip_rotation_l", "lumbar_extension"]:
+                if name in COORDS_TO_SKIP:
                     coord.setValue(self.state, 0.0)
                     coord.setSpeedValue(self.state, 0.0)
                     continue
                 coord.setValue(self.state, self.data[name][t])
                 coord.setSpeedValue(self.state, self.data[f"{name}_vel"][t])
 
-    def get_observation_example(self) -> tuple[np.ndarray, dict]:
+    '''def get_observation_example(self) -> tuple[np.ndarray, dict]:
+        This is currently not relevant as it is from the legs.
+    
         """
         observation space of Brown for prosthetic model; size=91.
         From the paper:
@@ -416,4 +428,4 @@ class OsimModel(Env):
             print(f"{len(obs_list)} != 91")
             exit()
 
-        return np.asarray(obs_list), obs_dict
+        return np.asarray(obs_list), obs_dict'''
