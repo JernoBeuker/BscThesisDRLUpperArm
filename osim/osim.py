@@ -259,7 +259,7 @@ class OsimModel(Env):
         :param obs_dict: The observation of the environment
         :return: True if the environment is truncated, false otherwise
         """
-        return False # obs_dict["pelvis_tx"] < -0.10 or obs_dict["pelvis_ty"] < 0.60 or abs(obs_dict["pelvis_tz"]) > 0.4
+        return obs_dict['ty'] < 0.8 # obs_dict["pelvis_tx"] < -0.10 or obs_dict["pelvis_ty"] < 0.60 or abs(obs_dict["pelvis_tz"]) > 0.4
 
 
     def get_reward(self, obs_dict: dict) -> float:
