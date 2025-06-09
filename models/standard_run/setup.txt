@@ -1,0 +1,15 @@
+run_name: standard_run
+total_timesteps: 30000000
+n_envs: 16
+steps_per_iteration: 6144
+batch_size: 512
+n_epochs: 4
+learning_rate: 0.001
+size: 128
+clip_range: 0.25
+gamma: 0.99
+gae_lambda: 0.95
+prosthetic_model: False
+visualize: False
+continuous_action_space: False
+random_init: True

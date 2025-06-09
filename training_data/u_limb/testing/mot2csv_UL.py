@@ -9,7 +9,7 @@ is_radians = False
 data = False
 data_dict = {}
 dir_name = "training_data/u_limb/"
-filename = "IKresult_full"
+filename = "should_be_best"
 headers = []
 
 with open(f"{dir_name}/{filename}.mot") as f:

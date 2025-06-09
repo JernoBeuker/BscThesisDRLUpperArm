@@ -140,8 +140,8 @@ def retrieve_model_and_data_paths(prosthetic_model: bool) -> tuple:
     :returns: tuple containing path to model and path to data
     """
     prosthetic_path = os.path.join(os.getcwd(), "osim", "models", "OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim")
-    healthy_path = os.path.join(os.getcwd(), "osim", "models", "upper_limb.osim")
-    data_path = os.path.join(os.getcwd(), "training_data", "u_limb", "IKresult_full.csv")
+    healthy_path = os.path.join(os.getcwd(), "osim", "models", "UL_model.osim")
+    data_path = os.path.join(os.getcwd(), "training_data", "u_limb", "IKresult.csv")
 
     if not os.path.exists(prosthetic_path) or not os.path.exists(healthy_path):
         raise "Model path does not exist, file missing, or working from wrong directory!"

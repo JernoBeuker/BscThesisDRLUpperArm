@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
 from gymnasium import Env, spaces
-from opensim import ActivationCoordinateActuator, Constant, Logger, Manager, Model, PrescribedController, \
+from opensim import ActivationCoordinateActuator, Constant, Logger, Manager, Model, Muscle, PrescribedController, \
     ScalarActuator, CoordinateActuator
 from typing import Optional
-import math
 
 """Opensim environment for musculoskeletal movement"""
 
@@ -22,6 +21,12 @@ COORDS_TO_SKIP = {
     "shoulder1_r2",
     "proximal_distal_r1",
     "proximal_distal_r3",
+    "cmc_flexion",
+    "mp_flexion",
+    "ip_flexion",
+    "2mcp_abduction",
+    "2pm_flexion",
+    "2md_flexion",
     "APLpt_tx",
     "APLpt_tx",
     "APLpt_ty",
@@ -39,19 +44,6 @@ COORDS_TO_SKIP = {
     "ty",
     "tz"
 }
-
- ## Not used rn, but very useful to have for now
-LOCKED_DOFS = {
-    "cmc_flexion", 
-    "cmc_abduction", 
-    "mp_flexion", 
-    "ip_flexion",
-    "2mcp_flexion", 
-    "2mcp_abduction", 
-    "2pm_flexion", 
-    "2md_flexion"
-}
-
 
 class OsimModel(Env):
 
@@ -172,6 +164,7 @@ class OsimModel(Env):
         :param options: (unused) Any additional information important for a reset.
         :return: The state as an array for the network, the state as a dictionary for human-readable data
         """
+        print("Resetting environment...")
         self.i_step = 0
         self.state = self.model.initializeState()
 
@@ -210,16 +203,36 @@ class OsimModel(Env):
         :return: The observation as a list, the reward, if terminated, if truncated, the observation as a dictionary
         """
         self.i_step += 1
-
         self.actuate(actions=actions)
 
-        self.state = self.manager.integrate(self.step_size * self.i_step)
-        self.model.realizeAcceleration(self.state)
+        try:
+            self.state = self.manager.integrate(self.step_size * self.i_step)
+            self.model.realizeAcceleration(self.state)
+        except Exception as e:
+            print(f"[ERROR] Simulation error at step {self.i_step}: {e}")
+            obs, _ = self.get_states()
+
+            if np.isnan(obs).any():
+                print(f"[FATAL] NaNs detected in observation after integration failure at step {self.i_step}")
+
+            obs = np.nan_to_num(obs, nan=0.0, posinf=1.0, neginf=-1.0)
+            return obs, 0.0, False, True, {}
 
         obs_list, obs_dict = self.get_states()
-        reward = self.get_reward(obs_dict=obs_dict)
-        truncated = self.is_truncated(obs_dict=obs_dict)
+
+        if np.isnan(obs_list).any():
+            print(f"[FATAL] NaNs detected in valid state at step {self.i_step}")
+            obs_list = np.nan_to_num(obs_list, nan=0.0, posinf=1.0, neginf=-1.0)
+            return obs_list, 0.0, False, True, {}
+
+        if self.is_truncated(obs_dict):
+            print(f"[INFO] Truncating due to invalid muscle state at step {self.i_step}")
+            return obs_list, 0.0, False, True, {}
+
+        reward = self.get_reward(obs_dict)
         terminated = self.is_terminated()
+        truncated = self.is_truncated(obs_dict)
+
         return obs_list, reward, terminated, truncated, {}
 
     def actuate(self, actions: np.ndarray) -> None:
@@ -249,8 +262,7 @@ class OsimModel(Env):
         """
         return self.i_step >= self.data.shape[0] - 1
 
-    @staticmethod
-    def is_truncated(obs_dict: dict) -> bool:
+    def is_truncated(self, obs_dict: dict) -> bool:
         """
         Determines if the environment is truncated.
 
@@ -260,6 +272,14 @@ class OsimModel(Env):
         :param obs_dict: The observation of the environment
         :return: True if the environment is truncated, false otherwise
         """
+        for i in range(self.muscleSet.getSize()):
+            force = self.muscleSet.get(i)
+            muscle = Muscle.safeDownCast(force)
+            if muscle is None:
+                continue  # Not a Muscle object, skip it
+            if muscle.getFiberLength(self.state) <= 0.001:
+                print("TRUNCATED: Muscle fiber length is too short.")
+                return True
         return False
 
 
@@ -280,37 +300,9 @@ class OsimModel(Env):
         :param obs_dict: The current state of the environment
         :return: The reward of environment at the current observation, range [0, 1]
         """
-        
+
         t = self.i_step
         d = self.data
-
-        # === GOAL REWARD ===
-        # try: ## This is a temporary goal reward funtion, Robert made a proper one.
-        #     hand_y = obs_dict["ty"]
-        #     target_y = d["ty"][t]
-        #     dist_squared = (hand_y - target_y) ** 2
-        #     goal_reward = np.exp(-10 * dist_squared)
-        # except KeyError:
-        #     print("Hand/target markers are missing")
-        #     goal_reward = 1.0
-
-        cmc_abduction = self.get_joint_angle("CMC1b", "cmc_abduction")
-        two_mcp_flexion = self.get_joint_angle("2MCP", "2mcp_flexion")
-
-        # Calculate for finger contact
-        fingers_touching = two_mcp_flexion < math.radians(0.5 * (math.degrees(cmc_abduction) - 5) + 57)
-
-        # Get muscle forces
-        eip_force = self.get_muscle_force("EIP")
-        epb_force = self.get_muscle_force("EPB")
-
-        # Grasp reward: fingers not touching, but muscles are active
-        if not fingers_touching and (eip_force > 0.0 or epb_force > 0.0):
-            goal_reward = 1.0
-        else:
-            goal_reward = 0.0
-
-        # === IMITATION REWARD ===
 
         p_loss = 0.0
         v_loss = 0.0
@@ -329,7 +321,7 @@ class OsimModel(Env):
         velocity_reward = np.exp(-0.1 * v_loss)
         imitation_reward = 0.9 * position_reward + 0.1 * velocity_reward
 
-        return 0.9 * imitation_reward + 0.1 * goal_reward
+        return imitation_reward
 
     def get_states(self) -> tuple[np.ndarray, dict]:
         """
@@ -342,18 +334,39 @@ class OsimModel(Env):
         """
         obs_dict = {}
         obs_list = []
-        for joint in self.jointSet:
-            for i in range(joint.numCoordinates()):
-                coord = joint.get_coordinates(i)
-                name = coord.getName()
-                if name in COORDS_TO_SKIP:
-                    continue
-                obs_dict[f"{name}"] = coord.getValue(self.state)
-                obs_dict[f"{name}_vel"] = coord.getSpeedValue(self.state)
-                obs_list.append(coord.getValue(self.state))
-                obs_list.append(coord.getSpeedValue(self.state))
 
-        return np.asarray(obs_list), obs_dict
+        try:
+            for joint in self.jointSet:
+                for i in range(joint.numCoordinates()):
+                    coord = joint.get_coordinates(i)
+                    name = coord.getName()
+
+                    if name in COORDS_TO_SKIP:
+                        continue
+
+                    try:
+                        pos = coord.getValue(self.state)
+                        vel = coord.getSpeedValue(self.state)
+
+                        if np.isnan(pos) or np.isnan(vel):
+                            print(f"[NaN WARNING] NaN in joint state: {name} at step {self.i_step}")
+                            pos, vel = 0.0, 0.0
+
+                    except Exception as e:
+                        print(f"[WARN] Failed to get state for coordinate {name} at step {self.i_step}: {e}")
+                        pos, vel = 0.0, 0.0
+
+                    obs_dict[f"{name}"] = pos
+                    obs_dict[f"{name}_vel"] = vel
+                    obs_list.extend([pos, vel])
+
+        except Exception as e:
+            print(f"[ERROR] Failed in get_states loop at step {self.i_step}: {e}")
+            # Fallback: Create safe dummy observation of same length
+            obs_list = [0.0] * (len(self.jointSet) * 2)  # fallback estimate
+
+        obs_array = np.nan_to_num(np.asarray(obs_list, dtype=np.float32), nan=0.0, posinf=1.0, neginf=-1.0)
+        return obs_array, obs_dict
 
     def set_state(self, t: int) -> None:
         """
@@ -446,33 +459,3 @@ class OsimModel(Env):
             exit()
 
         return np.asarray(obs_list), obs_dict'''
-
-    def get_joint_angle(self, joint_name: str, coordinate_name: str) -> float:
-        """
-        Retrieves the current angle/value of a specific coordinate in a joint.
-
-        :param joint_name: The name of the joint
-        :param coordinate_name: The name of the coordinate
-        :return: The current angle/value of the coordinate
-        :raises: ValueError if joint or coordinate is not found
-        """
-        if not self.jointSet.contains(joint_name):
-            raise ValueError(f"Joint '{joint_name}' not found in JointSet.")
-        joint = self.jointSet.get(joint_name)
-        for i in range(joint.numCoordinates()):
-            coord = joint.get_coordinates(i)
-            if coord.getName() == coordinate_name:
-                return coord.getValue(self.state)
-        raise ValueError(f"Coordinate '{coordinate_name}' not found in joint '{joint_name}'.")
-    
-    def get_muscle_force(self, muscle_name: str) -> float:
-        """
-        Safely get the current force exerted by a named muscle.
-
-        :param muscle_name: The name of the muscle in the ForceSet
-        :return: The force in Newtons
-        :raises: ValueError if the muscle name is invalid
-        """
-        if not self.forceSet.contains(muscle_name):
-            raise ValueError(f"Muscle '{muscle_name}' not found in ForceSet.")
-        return self.forceSet.get(muscle_name).getRecordValues(self.state).get(0)
