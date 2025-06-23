@@ -41,3 +41,55 @@
 |    policy_gradient_loss | -0.0257     |
 |    value_loss           | 2.3         |
 -----------------------------------------
+
+
+
+_____________________________________________________________________________________________________
+
+
+
+
+-----------------------------------------
+| rollout/                |             |
+|    ep_len_mean          | 326         |
+|    ep_rew_mean          | 60.3        |
+| time/                   |             |
+|    fps                  | 35          |
+|    iterations           | 20          |
+|    time_elapsed         | 3473        |
+|    total_timesteps      | 122880      |
+| train/                  |             |
+|    approx_kl            | 0.022787506 |
+|    clip_fraction        | 0.109       |
+|    clip_range           | 0.25        |
+|    entropy_loss         | -34         |
+|    explained_variance   | 0.92        |
+|    learning_rate        | 0.000611    |
+|    loss                 | 3.28        |
+|    n_updates            | 76          |
+|    policy_gradient_loss | -0.0227     |
+|    value_loss           | 7.99        |
+-----------------------------------------
+
+
+-----------------------------------------
+| rollout/                |             |
+|    ep_len_mean          | 408         |
+|    ep_rew_mean          | 71.5        |
+| time/                   |             |
+|    fps                  | 51          |
+|    iterations           | 40          |
+|    time_elapsed         | 4764        |
+|    total_timesteps      | 245760      |
+| train/                  |             |
+|    approx_kl            | 0.014882349 |
+|    clip_fraction        | 0.0498      |
+|    clip_range           | 0.25        |
+|    entropy_loss         | -33.6       |
+|    explained_variance   | 0.928       |
+|    learning_rate        | 0.000201    |
+|    loss                 | 2.68        |
+|    n_updates            | 156         |
+|    policy_gradient_loss | -0.0202     |
+|    value_loss           | 7.7         |
+-----------------------------------------

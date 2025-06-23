@@ -272,8 +272,8 @@ class OsimModel(Env):
         :param obs_dict: The observation of the environment
         :return: True if the environment is truncated, false otherwise
         """
-        if obs_dict[obs_dict['ty'] < 0.8]:
-            return True
+        # if obs_dict[obs_dict['ty'] < 0.8]:
+        #     return True
         for i in range(self.muscleSet.getSize()):
             force = self.muscleSet.get(i)
             muscle = Muscle.safeDownCast(force)

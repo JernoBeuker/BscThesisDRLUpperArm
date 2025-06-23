@@ -140,8 +140,13 @@ def retrieve_model_and_data_paths(prosthetic_model: bool) -> tuple:
     :returns: tuple containing path to model and path to data
     """
     prosthetic_path = os.path.join(os.getcwd(), "osim", "models", "OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim")
-    healthy_path = os.path.join(os.getcwd(), "osim", "models", "UL_model.osim")
+    healthy_path = os.path.join(os.getcwd(), "osim", "models", "Model_Contact2.osim")
     data_path = os.path.join(os.getcwd(), "training_data", "u_limb", "IKresult.csv")
+
+    # new_simplified_model_FPL
+    # FPL_model_efficient_maybe
+
+    print(f"Prosthetic model path: {prosthetic_path}")
 
     if not os.path.exists(prosthetic_path) or not os.path.exists(healthy_path):
         raise "Model path does not exist, file missing, or working from wrong directory!"
@@ -213,4 +218,4 @@ if __name__ == "__main__":
     model.set_logger(log)
 
     """Start training the model!"""
-    model.learn(total_timesteps=args.total_timesteps, progress_bar=True, log_interval=20)
+    model.learn(total_timesteps=args.total_timesteps, progress_bar=True, log_interval=2)
