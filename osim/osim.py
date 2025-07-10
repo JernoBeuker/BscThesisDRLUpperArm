@@ -4,6 +4,7 @@ from gymnasium import Env, spaces
 from opensim import ActivationCoordinateActuator, Constant, Logger, Manager, Model, Muscle, PrescribedController, \
     ScalarActuator, CoordinateActuator
 from typing import Optional
+import math as m
 
 """Opensim environment for musculoskeletal movement"""
 
@@ -284,6 +285,38 @@ class OsimModel(Env):
                 return True
         return False
 
+    def get_joint_angle(self, joint_name: str, coordinate_name: str) -> float:
+        """
+        Retrieves the current angle/value of a specific coordinate in a joint.
+
+        :param joint_name: The name of the joint
+        :param coordinate_name: The name of the coordinate
+        :return: The current angle/value of the coordinate
+        :raises: ValueError if joint or coordinate is not found
+        """
+        if not self.jointSet.contains(joint_name):
+            raise ValueError(f"Joint '{joint_name}' not found in JointSet.")
+
+        joint = self.jointSet.get(joint_name)
+
+        for i in range(joint.numCoordinates()):
+            coord = joint.get_coordinates(i)
+            if coord.getName() == coordinate_name:
+                return coord.getValue(self.state)
+
+        raise ValueError(f"Coordinate '{coordinate_name}' not found in joint '{joint_name}'.")
+    
+    def get_muscle_force(self, muscle_name: str) -> float:
+        """
+        Safely get the current force exerted by a named muscle.
+
+        :param muscle_name: The name of the muscle in the ForceSet
+        :return: The force in Newtons
+        :raises: ValueError if the muscle name is invalid
+        """
+        if not self.forceSet.contains(muscle_name):
+            raise ValueError(f"Muscle '{muscle_name}' not found in ForceSet.")
+        return self.forceSet.get(muscle_name).getRecordValues(self.state).get(0)
 
     def get_reward(self, obs_dict: dict) -> float:
         """
@@ -302,7 +335,22 @@ class OsimModel(Env):
         :param obs_dict: The current state of the environment
         :return: The reward of environment at the current observation, range [0, 1]
         """
+        #----Goal Reward----#
+        cmc_abduction = self.get_joint_angle("CMC1b", "cmc_abduction")
+        two_mcp_flexion = self.get_joint_angle("2MCP", "2mcp_flexion")
 
+        # Calculate for finger contact
+        fingers_touching = two_mcp_flexion < m.radians(0.5 * (m.degrees(cmc_abduction) - 5) + 57)
+
+        # Get muscle forces
+        eip_force, epb_force = self.get_muscle_force("EIP"), self.get_muscle_force("EPB")
+
+        # Grasp reward: fingers not touching, but muscles are active
+        goal_reward_bool = False
+        if not fingers_touching and (eip_force > 0.0 or epb_force > 0.0):
+            goal_reward_bool = True
+        
+        #----Imitation Reward----#
         t = self.i_step
         d = self.data
 
@@ -322,8 +370,11 @@ class OsimModel(Env):
         position_reward = np.exp(-4 * p_loss)
         velocity_reward = np.exp(-0.1 * v_loss)
         imitation_reward = 0.9 * position_reward + 0.1 * velocity_reward
+        
+        if goal_reward_bool:
+            goal_reward = imitation_reward
 
-        return imitation_reward
+        return 0.9 * imitation_reward + 0.1 * goal_reward
 
     def get_states(self) -> tuple[np.ndarray, dict]:
         """
