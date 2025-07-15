@@ -169,6 +169,7 @@ if __name__ == "__main__":
     args = get_cmd_arguments()
 
     """setup environment and model"""
+    print('setting up environment and model...')
     model_path, data_path = retrieve_model_and_data_paths(args.prosthetic_model)
 
     n_steps = args.steps_per_iteration // args.n_envs
@@ -183,6 +184,7 @@ if __name__ == "__main__":
                         seed=random.randint(1, 9999))
 
     """setup MLP policy and Stable Baelines3 PPO algorithm"""
+    print('Setting up MLP policy and Stable Baelines3 PPO algorithm...')
     size = args.size
     policy_kwargs = {
         "net_arch": {
@@ -192,10 +194,12 @@ if __name__ == "__main__":
     }
 
     """Organize the run and setting up logger"""
+    print('Organizing the run and setting up logger...')
     folder = f"./models/{args.run_name}"
     os.makedirs(folder, exist_ok=True)
     save_specs(args, folder)
 
+    print('initializing model...')
     model = PPO(
         policy="MlpPolicy",
         env=envs,
@@ -218,4 +222,5 @@ if __name__ == "__main__":
     model.set_logger(log)
 
     """Start training the model!"""
+    print('Starting to train the model...')
     model.learn(total_timesteps=args.total_timesteps, progress_bar=True, log_interval=2)
