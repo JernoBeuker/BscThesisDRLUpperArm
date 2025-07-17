@@ -141,7 +141,7 @@ def retrieve_model_and_data_paths(prosthetic_model: bool) -> tuple:
     """
     prosthetic_path = os.path.join(os.getcwd(), "osim", "models", "OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim")
     healthy_path = os.path.join(os.getcwd(), "osim", "models", "Model_Contact3.osim")
-    data_path = os.path.join(os.getcwd(), "training_data", "175", "175-FIX_vel.csv")
+    data_path = os.path.join(os.getcwd(), "training_data", "u_limb", "IKresult.csv")
 
     # new_simplified_model_FPL
     # FPL_model_efficient_maybe

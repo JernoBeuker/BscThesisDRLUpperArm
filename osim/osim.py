@@ -371,6 +371,7 @@ class OsimModel(Env):
         velocity_reward = np.exp(-0.1 * v_loss)
         imitation_reward = 0.9 * position_reward + 0.1 * velocity_reward
         
+        goal_reward = 0
         if goal_reward_bool:
             goal_reward = imitation_reward
 

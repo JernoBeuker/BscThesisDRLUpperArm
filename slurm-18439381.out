@@ -1,6 +1,0 @@
-The following modules were not unloaded:
-  (Use "module --force purge" to unload all):
-
-  1) 2023.01   2) StdEnv
-setting up environment and model...
-Prosthetic model path: /home4/s5193559/BscThesisDRLUpperArm/osim/models/OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim

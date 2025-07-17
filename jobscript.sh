@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #SBATCH --job-name=BscThesisDRLUpperArm
-#SBATCH --time=1-0
-#SBATCH --mem=5GB
+#SBATCH --time=10-0
+#SBATCH --mem=100GB
 
 module purge
 module load Miniconda3/4.8.3
 
-source activate Bsc_Env
+conda activate Bsc_Env
 
-python test_environment.py
+python run_script.py --n_envs 1

@@ -1,6 +1,6 @@
 run_name: standard_run
 total_timesteps: 30000000
-n_envs: 16
+n_envs: 1
 steps_per_iteration: 6144
 batch_size: 512
 n_epochs: 4
