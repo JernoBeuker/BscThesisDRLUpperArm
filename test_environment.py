@@ -4,9 +4,9 @@ from osim.osim import OsimModel
 
 env = OsimModel(
     model_path="osim/models/Model_Contact3.osim",
-    data_path="training_data/175/175-FIX_vel.csv",
+    data_path="training_data/u_limb/IKresult.csv",
     integrator_accuracy=0.01,
-    visualize=True,
+    visualize=False,
     random_init=False,
     step_size=0.01,
 )

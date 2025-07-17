@@ -20,9 +20,9 @@ def test_trained_model(prosthetic: bool, save_dir: int, iterations: int, random_
     model_name = "OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim" if prosthetic else "OS4_gait14dof22musc.osim"
     env = OsimModel(
         model_path=f"osim/models/{model_name}",
-        data_path="training_data/175/175-FIX_vel.csv",
+        data_path="training_data/u_limb/IKresult.csv",
         integrator_accuracy=0.01,
-        visualize=True,
+        visualize=False,
         random_init=random_positions,
         step_size=0.01,  # make sure this corresponds to your dataset
         continious_action_space=continious,
