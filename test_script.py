@@ -17,7 +17,7 @@ def test_trained_model(prosthetic: bool, save_dir: int, iterations: int, random_
     """
 
 
-    model_name = "OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim" if prosthetic else "OS4_gait14dof22musc.osim"
+    model_name = "OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim" if prosthetic else "Model_Contact3.osim"
     env = OsimModel(
         model_path=f"osim/models/{model_name}",
         data_path="training_data/u_limb/IKresult.csv",
