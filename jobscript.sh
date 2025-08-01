@@ -1,11 +1,11 @@
 #!/bin/bash
 
 #SBATCH --job-name=BscThesisDRLUpperArm
-#SBATCH --time=10:00:00
-#SBATCH --mem=5GB
+#SBATCH --time=6-0
+#SBATCH --mem=10GB
 
 module purge
-module load Miniconda3/4.8.3
+module load Miniconda3/22.11.1-1
 source $(conda info --base)/etc/profile.d/conda.sh
 
 if conda info --envs | grep -q '^Bsc_Env[[:space:]]'; then

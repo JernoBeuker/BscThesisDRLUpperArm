@@ -4,6 +4,7 @@ import os
 from osim.osim import OsimModel
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import SubprocVecEnv, make_vec_env
+from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.logger import configure
 from argparse import ArgumentParser, Namespace
 
@@ -140,8 +141,8 @@ def retrieve_model_and_data_paths(prosthetic_model: bool) -> tuple:
     :returns: tuple containing path to model and path to data
     """
     prosthetic_path = os.path.join(os.getcwd(), "osim", "models", "OS4_gait14dof15musc_2act_LTFP_VR_DynAct.osim")
-    healthy_path = os.path.join(os.getcwd(), "osim", "models", "Model_Contact3.osim")
-    data_path = os.path.join(os.getcwd(), "training_data", "u_limb", "IKresult.csv")
+    healthy_path = os.path.join(os.getcwd(), "osim", "models", "leg_stuff","OS4_gait14dof22musc.osim")
+    data_path = os.path.join(os.getcwd(), "training_data", "175", "175-FIX_vel.csv")
 
     # new_simplified_model_FPL
     # FPL_model_efficient_maybe

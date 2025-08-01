@@ -6,8 +6,6 @@ from opensim import ActivationCoordinateActuator, Constant, Logger, Manager, Mod
 from typing import Optional
 import math as m
 
-"""Opensim environment for musculoskeletal movement"""
-
 COORDS_TO_SKIP = {
     "sternoclavicular_r2",
     "sternoclavicular_r3",
@@ -267,14 +265,14 @@ class OsimModel(Env):
         """
         Determines if the environment is truncated.
 
-        The truncated state is when the environment has become "unstable", the model has fallen over or gone of track.
-        You can define this how you like, but keep the conditions within the bounds of the training data.
+        The truncated state is when the environment has become "unstable", the bottle has fallen
+        or muscle fiber lengths go below zero.
 
         :param obs_dict: The observation of the environment
         :return: True if the environment is truncated, false otherwise
         """
-        # if obs_dict[obs_dict['ty'] < 0.8]:
-        #     return True
+        if obs_dict[obs_dict['ty'] < 0.8]:
+            return True
         for i in range(self.muscleSet.getSize()):
             force = self.muscleSet.get(i)
             muscle = Muscle.safeDownCast(force)
@@ -320,17 +318,14 @@ class OsimModel(Env):
 
     def get_reward(self, obs_dict: dict) -> float:
         """
-        Calculates the rewards by comparing the observed state to the training data.
+        Calculates the rewards by comparing the observed state to the training 
+        data together with the objective (bottle pickup).
 
-        Example:
-         pelvis_tx_error = (0.98 - 0.90)^2 = 0.0064
-         reward = e^(-8 x 0.0064) = 0.9500
-
-        The error is the square of the difference, and the reward is in the form:
+        The error is the square of the difference, and the imitation reward is in the form:
           reward = e^(-c * sum(errors))
-        c determines how aggressive the reward is. Higher = more aggressive.
-
-        Make sure that the reward calculated is a value in the range [0, 1]
+        c determines how aggressive the imitation reward is. Higher = more aggressive.
+        
+        if bottle pickup is reached, the goal reward is set to the imitation reward.
 
         :param obs_dict: The current state of the environment
         :return: The reward of environment at the current observation, range [0, 1]
@@ -438,78 +433,3 @@ class OsimModel(Env):
                     continue
                 coord.setValue(self.state, self.data[name][t])
                 coord.setSpeedValue(self.state, self.data[f"{name}_vel"][t])
-
-    '''def get_observation_example(self) -> tuple[np.ndarray, dict]:
-        This is currently not relevant as it is from the legs.
-    
-        """
-        observation space of Brown for prosthetic model; size=91.
-        From the paper:
-        Learning to Walk With Deep Reinforcement Learning:
-        Forward Dynamic Simulation of a Physics-Based Musculoskeletal Model of an Osseointegrated Transfemoral Amputee.
-
-        This is how the model was able to walk in the previous architecture, that architecture was fit to this observation space.
-        You could take inspiration from this (and see how some values are extracted from self.state, this is a bit odd as you first get the body/joint/muscle and then put in the state, to get the corresponding value)
-        """
-
-        obs_dict = {}
-        obs_list = []
-
-        """joints: 8 (hip) + 4(knee) + 4(ankle) + 12 (pelvis) = +28"""
-        for joint in self.jointSet:
-            for i in range(joint.numCoordinates()):
-                coord = joint.get_coordinates(i)
-                name = coord.getName()
-                if name in [
-                    "hip_rotation_r",
-                    "hip_rotation_l",
-                    "lumbar_extension",
-                ]:
-                    continue
-                obs_dict[f"{name}"] = coord.getValue(self.state)
-                obs_dict[f"{name}_vel"] = coord.getSpeedValue(self.state)
-                obs_list.extend([coord.getValue(self.state), coord.getSpeedValue(self.state)])
-
-        """muscle: 15 * 3 = +45"""
-
-        for muscle in self.muscleSet:
-            name = muscle.getName()
-            obs_dict[f"{name}_fiber_length"] = muscle.getFiberLength(self.state) / muscle.getOptimalFiberLength()
-            obs_dict[f"{name}_fiber_velocity"] = muscle.getFiberVelocity(self.state) / muscle.getOptimalFiberLength()
-            obs_dict[f"{name}_fiber_force"] = muscle.getFiberForce(self.state) / muscle.getMaxIsometricForce()
-            obs_list.extend(
-                [obs_dict[f"{name}_fiber_length"], obs_dict[f"{name}_fiber_velocity"], obs_dict[f"{name}_fiber_force"]])
-
-        """ground reaction forces: 2 * 3 (xyz) = +6"""
-        for grf_name in ["foot_r", "foot_l"]:
-            force = self.forceSet.get(grf_name)
-            forces = force.getRecordValues(self.state)
-            for i in range(3):  # xyz
-                obs_dict[f"force_{grf_name}_{i}"] = forces.get(i) / (self.model_mass * self.gravity)
-                obs_list.append(obs_dict[f"force_{grf_name}_{i}"])
-
-        """actuator: 6 * 2 = +12"""
-        for act_name in ["knee_actuator", "ankle_actuator"]:
-            actuator = self.actuatorSet.get(act_name)
-            act_scalar = ScalarActuator.safeDownCast(actuator)
-            act_dyn = ActivationCoordinateActuator.safeDownCast(actuator)
-
-            obs_dict[f"{act_name}_speed"] = act_scalar.getSpeed(self.state)
-            obs_dict[f"{act_name}_control"] = act_scalar.getControl(self.state)
-            obs_dict[f"{act_name}_actuation"] = act_scalar.getActuation(self.state)
-            obs_dict[f"{act_name}_power"] = act_scalar.getPower(self.state)
-
-            obs_dict[f"{act_name}_activation"] = act_dyn.getStateVariableValue(self.state,
-                                                                               f'/forceset/{act_name}/activation')
-            obs_dict[f"{act_name}_force"] = self.forceSet.get(act_name).getRecordValues(self.state).get(
-                0) / CoordinateActuator.safeDownCast(actuator).getOptimalForce()
-
-            obs_list.extend(
-                [obs_dict[f"{act_name}_speed"], obs_dict[f"{act_name}_control"], obs_dict[f"{act_name}_actuation"],
-                 obs_dict[f"{act_name}_power"], obs_dict[f"{act_name}_activation"], obs_dict[f"{act_name}_force"]])
-
-        if len(obs_list) != 91:
-            print(f"{len(obs_list)} != 91")
-            exit()
-
-        return np.asarray(obs_list), obs_dict'''

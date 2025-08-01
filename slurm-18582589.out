@@ -502,74 +502,115 @@ Setting up MLP policy and Stable Baelines3 PPO algorithm...
 Organizing the run and setting up logger...
 initializing model...
 Logging to ./models/standard_run
-Starting to train the model...
-Traceback (most recent call last):
-  File "/home4/s5193559/BscThesisDRLUpperArm/run_script.py", line 226, in <module>
-    model.learn(total_timesteps=args.total_timesteps, progress_bar=True, log_interval=2)
-  File "/home4/s5193559/BscThesisDRLUpperArm/stable_baselines3/ppo/ppo.py", line 334, in learn
-    return super().learn(
-  File "/home4/s5193559/BscThesisDRLUpperArm/stable_baselines3/common/on_policy_algorithm.py", line 263, in learn
-    continue_training = self.collect_rollouts(
-  File "/home4/s5193559/BscThesisDRLUpperArm/stable_baselines3/common/on_policy_algorithm.py", line 182, in collect_rollouts
-    new_obs, rewards, dones, infos = env.step(clipped_actions)
-  File "/home4/s5193559/BscThesisDRLUpperArm/stable_baselines3/common/vec_env/base_vec_env.py", line 203, in step
-    return self.step_wait()
-  File "/home4/s5193559/BscThesisDRLUpperArm/stable_baselines3/common/vec_env/subproc_vec_env.py", line 134, in step_wait
-    results = [remote.recv() for remote in self.remotes]
-  File "/home4/s5193559/BscThesisDRLUpperArm/stable_baselines3/common/vec_env/subproc_vec_env.py", line 134, in <listcomp>
-    results = [remote.recv() for remote in self.remotes]
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/multiprocessing/connection.py", line 250, in recv
-    buf = self._recv_bytes()
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/multiprocessing/connection.py", line 414, in _recv_bytes
-    buf = self._recv(4)
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/multiprocessing/connection.py", line 383, in _recv
-    raise EOFError
-EOFError
-Exception ignored in: <function tqdm.__del__ at 0x7f45555b1ea0>
-Traceback (most recent call last):
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/tqdm/std.py", line 1148, in __del__
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/tqdm/rich.py", line 121, in close
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/rich/progress.py", line 1191, in __exit__
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/rich/progress.py", line 1177, in stop
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/rich/live.py", line 150, in stop
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/rich/live.py", line 247, in refresh
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/rich/console.py", line 1693, in print
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/rich/console.py", line 1550, in _collect_renderables
-  File "/home4/s5193559/.conda/envs/Bsc_Env/lib/python3.10/site-packages/rich/protocol.py", line 28, in rich_cast
-ImportError: sys.meta_path is None, Python is likely shutting down
-slurmstepd: error: Detected 1 oom_kill event in StepId=18582371.batch. Some of the step tasks have been OOM Killed.
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from DELT1
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from DELT1
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from ANC
+SimTK Exception thrown at Millard2012EquilibriumMuscle.cpp:928:
+  Error detected by Simbody method calcMuscleDynamicsInfo: The muscle fiber has a length of 0, causing a singularity
+  (Required condition 'mli.fiberLength > SimTK::SignificantReal' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from DELT1
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from DELT1
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from TMIN
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from TMIN
+TMIN Fiber velocity Newton method did not converge
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from INFSP
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from INFSP
+INFSP Fiber velocity Newton method did not converge
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from ANC
+SimTK Exception thrown at Millard2012EquilibriumMuscle.cpp:928:
+  Error detected by Simbody method calcMuscleDynamicsInfo: The muscle fiber has a length of 0, causing a singularity
+  (Required condition 'mli.fiberLength > SimTK::SignificantReal' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from ANC
+SimTK Exception thrown at Millard2012EquilibriumMuscle.cpp:928:
+  Error detected by Simbody method calcMuscleDynamicsInfo: The muscle fiber has a length of 0, causing a singularity
+  (Required condition 'mli.fiberLength > SimTK::SignificantReal' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from DELT1
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from DELT1
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from DELT1
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from DELT1
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from DELT1
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from DELT1
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from DELT1
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from DELT1
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from PL
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from PL
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from INFSP
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from INFSP
+INFSP Fiber velocity Newton method did not converge
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from PL
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from PL
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+Exception caught in Millard2012EquilibriumMuscle::calcMuscleDynamicsInfo from DELT1
+Exception caught in Millard2012EquilibriumMuscle::calcFiberVelocityInfo from DELT1
+SimTK Exception thrown at MuscleFixedWidthPennationModel.cpp:169:
+  Error detected by Simbody method MuscleFixedWidthPennationModel::calcPennationAngularVelocity: Fiber length cannot be zero.
+  (Required condition 'fiberLength > 0' was not met.)
+
+slurmstepd: error: *** JOB 18582589 ON memory2 CANCELLED AT 2025-07-28T19:03:42 DUE TO TIME LIMIT ***
 
 ###############################################################################
 Hábrók Cluster
-Job 18582371 for user s5193559
-Finished at: Fri Jul 18 18:03:10 CEST 2025
+Job 18582589 for user s5193559
+Finished at: Mon Jul 28 19:03:47 CEST 2025
 
 Job details:
 ============
 
-Job ID                         : 18582371
+Job ID                         : 18582589
 Name                           : BscThesisDRLUpperArm
 User                           : s5193559
-Partition                      : regularmedium
-Nodes                          : node100
+Partition                      : himemlong
+Nodes                          : memory2
 Number of Nodes                : 1
 Cores                          : 1
 Number of Tasks                : 1
-State                          : OUT_OF_MEMORY  
-Submit                         : 2025-07-18T17:53:54
-Start                          : 2025-07-18T17:53:55
-End                            : 2025-07-18T18:03:06
-Reserved walltime              : 10:00:00
-Used walltime                  : 00:09:11
-Used CPU time                  : 00:02:54 (Efficiency: 31.50%)
-% User (Computation)           : 72.73%
-% System (I/O)                 : 27.27%
-Total memory reserved          : 5G
-Maximum memory used            : 1.43G
+State                          : TIMEOUT  
+Submit                         : 2025-07-18T19:03:32
+Start                          : 2025-07-18T19:03:33
+End                            : 2025-07-28T19:03:43
+Reserved walltime              : 10-00:00:00
+Used walltime                  : 10-00:00:10
+Used CPU time                  :  9-23:13:53 (Efficiency: 99.68%)
+% User (Computation)           : 99.99%
+% System (I/O)                 :  0.01%
+Total memory reserved          : 100G
+Maximum memory used            : 36.69G
 Hints and tips      :
- 1) The program efficiency is low.
-    Check the file in- and output pattern of your application.
- 2) You requested much more CPU memory than your program used.
+ 1) You requested much more CPU memory than your program used.
     Please reduce the requested amount of memory.
  *) For more information on these issues see:
     https://wiki.hpc.rug.nl/habrok/additional_information/job_hints

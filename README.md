@@ -1,3 +1,8 @@
+This project is development on the work of the robotics research lab ([github link](https://github.com/RoboticsLabRUG/Neuroprosthetics)).
+
+To access the code, switch to branch 'ArmDev', and follow the readme of the Neuroprosthetics page which is listed below:
+
+
 # Robotics Research Lab - OpenSim Reinforcement Learning Framework
 
 This repository contains the OpenSim Reinforcement Learning framework customized for the research
